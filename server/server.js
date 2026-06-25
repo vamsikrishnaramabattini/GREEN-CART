@@ -1,8 +1,8 @@
-import "dotenv/config";
+import "dotenv/config"; // 1. Load environment variables first!
 import dns from "node:dns";
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
+dns.setServers(["8.8.8.8", "1.1.1.1"]); // 2. Fix the ECONNREFUSED DNS glitch
 
-import cookieParser from "cookie-parser";
+import cookiesParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
@@ -12,61 +12,67 @@ import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+
+// ✅ FIXED TYPO AND CASE SENSITIVITY: Points exactly to controllers/orderController.js
 import { stripeWebhooks } from "./controllers/orderController.js";
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = ["http://localhost:5173"];
+// ✅ FIXED CORS: Added both port variations to ensure your frontend can always log in smoothly
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174"
+];
 
-// 1. Stripe webhook
-app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
+// Stripe Webhook Middleware must remain raw
+app.post('/stripe', express.raw({type:'application/json'}), stripeWebhooks);
 
-// 2. Global Middlewares
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: true })); 
+app.use(cookiesParser());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-// 3. Serverless Initialization Middleware
+app.get("/", (req, res) => {
+  res.send("API is working");
+});
+
+// Routes Middleware
+app.use('/api/user', userRouter);
+app.use('/api/product', productRouter); 
+app.use('/api/cart', cartRouter); 
+app.use('/api/address', addressRouter);
+app.use('/api/order', orderRouter); 
+
+// 3. Serverless Optimization: Warm up connection handling for cloud invocations
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     await connectcloudinary();
     next();
   } catch (error) {
-    console.error("Initialization error during request:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Database or Cloudinary services failed to initialize." 
-    });
+    console.error("Database connection failure:", error);
+    res.status(500).send("Database connection failure");
   }
 });
 
-// 4. Test route
-app.get("/", (req, res) => {
-  res.send("API is working");
-});
-
-// 5. API Routes
-app.use("/api/user", userRouter);
-app.use("/api/product", productRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/address", addressRouter);
-app.use("/api/order", orderRouter);
-
-// 🛑 ONLY RUNS LOCALLY (Does not interfere with Vercel)
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, async () => {
-    try {
+// Start server only if NOT running in production (Vercel handles production routing automatically)
+const startServer = async () => {
+  try {
+    if (process.env.NODE_ENV !== 'production') {
       await connectDB();
-      await connectcloudinary();
-      console.log(`🚀 Server running locally on http://localhost:${PORT}`);
-    } catch (err) {
-      console.error("Local startup connection error:", err);
+      await connectcloudinary(); 
+      app.listen(PORT, () => {
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      });
     }
-  });
-}
+  } catch (error) {
+    console.error("Initialization error:", error);
+  }
+};
 
-// ✅ Export app for Vercel
-export default app; 
+startServer();
+
+// Export the app instance for the serverless deployment engine
+export default app;
