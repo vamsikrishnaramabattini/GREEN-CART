@@ -74,5 +74,14 @@ const startServer = async () => {
 
 startServer();
 
+// ... existing imports ...
+
+// REMOVE or COMMENT OUT THIS BLOCK:
+/*
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});
+*/
+
 // Export the app instance for the serverless deployment engine
 export default app;
