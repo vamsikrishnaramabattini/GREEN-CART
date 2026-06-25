@@ -13,17 +13,18 @@ import cartRouter from "./routes/cartRoute.js";
 import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import Stripe from "stripe";
-import { stripeWebhooks } from "./controllers/ordercontroller.js";
+//  FIXED CASE SENSITIVITY: Changed ordercontroller.js to orderController.js
+import { stripeWebhooks } from "./controllers/orderController.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = ["http://localhost:5173"];
 
-app.post('/stripe', express.raw({type:'application/json'}),stripeWebhooks)
+app.post('/stripe', express.raw({type:'application/json'}), stripeWebhooks);
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // ✅ Added for multipart form data parsing (Product uploads)
+app.use(express.urlencoded({ extended: true })); 
 app.use(cookiesParser());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
@@ -33,19 +34,28 @@ app.get("/", (req, res) => {
 
 // Routes Middleware
 app.use('/api/user', userRouter);
-app.use('/api/product', productRouter); // Mount Product Routes
+app.use('/api/product', productRouter); 
 app.use('/api/cart', cartRouter); 
 app.use('/api/address', addressRouter);
-app.use('/api/order', orderRouter); // ✅ Fixed missing closing parenthesis and semicolon
+app.use('/api/order', orderRouter); 
 
-// 3. Connect to DB, Cloudinary, and then start the server
+// 3. Connect to DB, Cloudinary, and start server only if NOT running in production (Vercel handles production routing)
 const startServer = async () => {
-  await connectDB();
-  await connectcloudinary(); //  Initialize Cloudinary Configuration
-  
-  app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  });
+  try {
+    await connectDB();
+    await connectcloudinary(); 
+    
+    if (process.env.NODE_ENV !== 'production') {
+      app.listen(PORT, () => {
+        console.log(` Server is running on http://localhost:${PORT}`);
+      });
+    }
+  } catch (error) {
+    console.error("Initialization error:", error);
+  }
 };
 
 startServer();
+
+//  CRITICAL FOR VERCEL: Export the app instance so the serverless engine can route it!
+export default app;
