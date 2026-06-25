@@ -1,9 +1,8 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import User from "../models/User.js"; // Make sure User model is imported for the cart cleanup loop
+import User from "../models/User.js"; 
 import Stripe from "stripe";
 
-// Initialize Stripe with your Secret Key from the .env file
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // ==========================================
@@ -17,17 +16,13 @@ export const placeOrderCOD = async (req, res) => {
       return res.json({ success: false, message: "Invalid data" });
     }
 
-    // Calculate total amount using product prices
     let amount = await items.reduce(async (accPromise, item) => {
       const acc = await accPromise;
       const product = await Product.findById(item.product);
-      
       const priceToUse = product.offerPrice !== undefined ? product.offerPrice : product.price;
-      
       return acc + (priceToUse * item.quantity);
     }, Promise.resolve(0));
 
-    // Add a standard 2% tax fee
     amount += Math.floor(amount * 0.02);
 
     const newOrder = await Order.create({
@@ -52,7 +47,7 @@ export const placeOrderCOD = async (req, res) => {
 export const placeOrderStripe = async (req, res) => {
   try {
     const { userId, items, address } = req.body;
-    const origin = req.headers.origin || "http://localhost:5173"; // Frontend base URL
+    const origin = req.headers.origin || "http://localhost:5173"; 
 
     if (!address || !items || items.length === 0) {
       return res.json({ success: false, message: "Invalid data" });
@@ -61,7 +56,6 @@ export const placeOrderStripe = async (req, res) => {
     let totalAmount = 0;
     const line_items = [];
 
-    // 1. Resolve product values and construct Stripe Checkout Line Items structure
     for (const item of items) {
       const product = await Product.findById(item.product);
       if (!product) continue;
@@ -82,7 +76,6 @@ export const placeOrderStripe = async (req, res) => {
       });
     }
 
-    // 2. Compute 2% Tax item matching your COD implementation structure
     const taxAmount = Math.floor(totalAmount * 0.02);
     totalAmount += taxAmount;
 
@@ -99,7 +92,6 @@ export const placeOrderStripe = async (req, res) => {
       });
     }
 
-    // 3. Document order as "Online" (Unpaid initially) inside MongoDB Atlas
     const newOrder = await Order.create({
       userId,
       items,
@@ -109,12 +101,10 @@ export const placeOrderStripe = async (req, res) => {
       isPaid: false,
     });
 
-    // 4. Construct Stripe Checkout Session 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-      // 🚀 CRITICAL FOR WEBHOOKS: Metadata attaches properties to recover on events
       metadata: {
         orderId: String(newOrder._id),
         userId: String(userId)
@@ -123,7 +113,6 @@ export const placeOrderStripe = async (req, res) => {
       cancel_url: `${origin}/loader?next=cart&success=false&orderId=${newOrder._id}`,
     });
 
-    // Return the link session URL to your client window browser redirect handler
     res.json({ success: true, session_url: session.url });
 
   } catch (error) {
@@ -133,7 +122,7 @@ export const placeOrderStripe = async (req, res) => {
 };
 
 // ==========================================
-// GET USER ORDERS (For Customer History) : /api/order/user
+// GET USER ORDERS : /api/order/user
 // ==========================================
 export const getUserOrders = async (req, res) => {
   try {
@@ -171,12 +160,10 @@ export const verifyStripe = async (req, res) => {
 };
 
 // ==========================================
-// 🚀 NEW FEATURE: STRIPE WEBHOOKS VERIFY PAYMENTS ACTION : /stripe
+// STRIPE WEBHOOKS VERIFY PAYMENTS ACTION : /stripe
 // ==========================================
 export const stripeWebhooks = async (request, response) => {
-  // Stripe Gateway Initialize
   const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-
   const sig = request.headers["stripe-signature"];
   let event;
 
@@ -190,23 +177,18 @@ export const stripeWebhooks = async (request, response) => {
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  // Handle the event
   switch (event.type) {
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object;
       const paymentIntentId = paymentIntent.id;
 
-      // Getting Session Metadata
       const session = await stripeInstance.checkout.sessions.list({
         payment_intent: paymentIntentId,
       });
 
       const { orderId, userId } = session.data[0].metadata;
       
-      // Mark Payment as Paid
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
-      
-      // Clear user cart
       await User.findByIdAndUpdate(userId, { cartItems: {} });
       break;
     }
@@ -215,7 +197,6 @@ export const stripeWebhooks = async (request, response) => {
       const paymentIntent = event.data.object;
       const paymentIntentId = paymentIntent.id;
 
-      // Getting Session Metadata
       const session = await stripeInstance.checkout.sessions.list({
         payment_intent: paymentIntentId,
       });

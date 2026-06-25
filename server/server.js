@@ -6,15 +6,16 @@ import cookiesParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
-import connectcloudinary from "./configs/cloudinary.js"; // Import Cloudinary config
+import connectcloudinary from "./configs/cloudinary.js"; 
 import userRouter from "./routes/userRoute.js";
-import productRouter from "./routes/productRoute.js"; // Import Product Router
+import productRouter from "./routes/productRoute.js"; 
 import cartRouter from "./routes/cartRoute.js";
 import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import Stripe from "stripe";
-//  FIXED CASE SENSITIVITY: Changed ordercontroller.js to orderController.js
-import { stripeWebhooks } from "./controllers/ordercontroller.js";
+// ✅ FIXED TYPO: Changed controllers/ordersontrollers.js to controllers/orderController.js
+import { stripeWebhooks } from "./controllers/orderController.js";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = ["http://localhost:5173"];
@@ -38,7 +39,7 @@ app.use('/api/cart', cartRouter);
 app.use('/api/address', addressRouter);
 app.use('/api/order', orderRouter); 
 
-// 3. Connect to DB, Cloudinary, and start server only if NOT running in production (Vercel handles production routing)
+// 3. Connect to DB, Cloudinary, and start server only if NOT running in production
 const startServer = async () => {
   try {
     await connectDB();
@@ -46,7 +47,7 @@ const startServer = async () => {
     
     if (process.env.NODE_ENV !== 'production') {
       app.listen(PORT, () => {
-        console.log(` Server is running on http://localhost:${PORT}`);
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
       });
     }
   } catch (error) {
@@ -56,6 +57,5 @@ const startServer = async () => {
 
 startServer();
 
-//  CRITICAL FOR VERCEL: Export the app instance so the serverless engine can route it!
+// Export for Vercel
 export default app;
-// trigger deploy fix
