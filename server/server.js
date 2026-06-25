@@ -15,40 +15,58 @@ import orderRouter from "./routes/orderRoute.js";
 import { stripeWebhooks } from "./controllers/orderController.js";
 
 const app = express();
+
 const allowedOrigins = ["http://localhost:5173"];
 
-// Stripe webhook
+// 1. Stripe webhook
 app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
-// Middleware
+// 2. Global Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-// Test route
+// 3. Serverless Initialization Middleware
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    await connectcloudinary();
+    next();
+  } catch (error) {
+    console.error("Initialization error during request:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Database or Cloudinary services failed to initialize." 
+    });
+  }
+});
+
+// 4. Test route
 app.get("/", (req, res) => {
   res.send("API is working");
 });
 
-// Routes
+// 5. API Routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
 
-// Init DB + Cloudinary
-(async () => {
-  try {
-    await connectDB();
-    await connectcloudinary();
-    console.log("✅ DB and Cloudinary connected");
-  } catch (error) {
-    console.error("Initialization error:", error);
-  }
-})();
+// 🛑 ONLY RUNS LOCALLY (Does not interfere with Vercel)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, async () => {
+    try {
+      await connectDB();
+      await connectcloudinary();
+      console.log(`🚀 Server running locally on http://localhost:${PORT}`);
+    } catch (err) {
+      console.error("Local startup connection error:", err);
+    }
+  });
+}
 
-// 🚫 No app.listen()
 // ✅ Export app for Vercel
 export default app;
