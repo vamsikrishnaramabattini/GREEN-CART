@@ -1,8 +1,7 @@
 import express from 'express';
 import authUser from '../middlewares/authUser.js';
 //  Added verifyStripe inside the import brackets below
-import { placeOrderCOD, placeOrderStripe, getUserOrders, verifyStripe } from '../controllers/orderController.js';
-
+import { placeOrderCOD, placeOrderStripe, getUserOrders, verifyStripe } from '../controllers/ordercontroller.js';
 const orderRouter = express.Router();
 
 // Payment Gateways Routes

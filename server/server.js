@@ -14,8 +14,7 @@ import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import Stripe from "stripe";
 //  FIXED CASE SENSITIVITY: Changed ordercontroller.js to orderController.js
-import { stripeWebhooks } from "./controllers/orderController.js";
-
+import { stripeWebhooks } from "./controllers/ordercontroller.js";
 const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = ["http://localhost:5173"];
