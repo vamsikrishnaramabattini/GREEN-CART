@@ -1,6 +1,6 @@
-import "dotenv/config"; // Load environment variables first
+import "dotenv/config";
 import dns from "node:dns";
-dns.setServers(["8.8.8.8", "1.1.1.1"]); // Fix ECONNREFUSED DNS glitch
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -17,7 +17,7 @@ import { stripeWebhooks } from "./controllers/orderController.js";
 const app = express();
 const allowedOrigins = ["http://localhost:5173"];
 
-// Stripe webhook route must use raw body
+// Stripe webhook
 app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 // Middleware
@@ -31,15 +31,15 @@ app.get("/", (req, res) => {
   res.send("API is working");
 });
 
-// Routes Middleware
+// Routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
 
-// Initialize DB + Cloudinary
-const init = async () => {
+// Init DB + Cloudinary
+(async () => {
   try {
     await connectDB();
     await connectcloudinary();
@@ -47,9 +47,8 @@ const init = async () => {
   } catch (error) {
     console.error("Initialization error:", error);
   }
-};
-init();
+})();
 
-//  Do NOT call app.listen() on Vercel
-//  Just export the app
+// 🚫 No app.listen()
+// ✅ Export app for Vercel
 export default app;

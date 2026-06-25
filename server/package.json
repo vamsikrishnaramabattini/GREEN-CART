@@ -1,15 +1,15 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Green Cart backend",
   "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server/server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Vamsi",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
