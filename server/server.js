@@ -39,24 +39,14 @@ app.get("/", (req, res) => {
 });
 
 // Routes Middleware
+await connectDB();
+await connectcloudinary();
+
 app.use('/api/user', userRouter);
-app.use('/api/product', productRouter); 
-app.use('/api/cart', cartRouter); 
+app.use('/api/product', productRouter);
+app.use('/api/cart', cartRouter);
 app.use('/api/address', addressRouter);
-app.use('/api/order', orderRouter); 
-
-// 3. Serverless Optimization: Warm up connection handling for cloud invocations
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    await connectcloudinary();
-    next();
-  } catch (error) {
-    console.error("Database connection failure:", error);
-    res.status(500).send("Database connection failure");
-  }
-});
-
+app.use('/api/order', orderRouter);
 // Start server only if NOT running in production (Vercel handles production routing automatically)
 const startServer = async () => {
   try {
