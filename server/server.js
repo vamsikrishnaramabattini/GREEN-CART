@@ -10,7 +10,7 @@ import connectcloudinary from "./configs/cloudinary.js";
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js"; 
 import cartRouter from "./routes/cartRoute.js";
-import addressRouter from "./routes/addressRoute.js";
+import addressRouter from "./routes/AddressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 
 // ✅ FIXED TYPO AND CASE SENSITIVITY: Points exactly to controllers/orderController.js

@@ -1,6 +1,6 @@
-import Order from "../models/Order.js";
-import Product from "../models/Product.js";
-import User from "../models/User.js"; 
+import Order from "../models/order.js";
+import Product from "../models/product.js";
+import User from "../models/user.js"; 
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
