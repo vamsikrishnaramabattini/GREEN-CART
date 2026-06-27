@@ -22,7 +22,9 @@ const PORT = process.env.PORT || 4000;
 // ✅ FIXED CORS: Added both port variations to ensure your frontend can always log in smoothly
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:5174"
+  "http://localhost:5174",
+  "https://green-cart-fcb4.vercel.app"
+
 ];
 
 // Stripe Webhook Middleware must remain raw
