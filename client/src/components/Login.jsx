@@ -4,7 +4,13 @@ import axios from 'axios';
 
 const Login = () => {
     // Destructured backendUrl and setToken from global context
-    const { showUserLogin, setShowUserLogin, backendUrl, setToken } = useContext(AppContext);
+   const { 
+    showUserLogin, 
+    setShowUserLogin, 
+    backendUrl, 
+    setToken,
+    checkAuthStatus
+} = useContext(AppContext);
     
     // State to toggle between 'Login' view and 'Sign Up' view
     const [currentState, setCurrentState] = useState('Login');
@@ -29,15 +35,13 @@ const Login = () => {
             }
 
             if (response.data.success) {
-                // 1. Save the token in local context state
-                setToken(response.data.token);
-                
-                // 2. Persistent storage so they stay logged in on refresh
-                localStorage.setItem('token', response.data.token);
-                
-                // 3. Close the modal popup window
-                setShowUserLogin(false);
-                
+
+    setToken(response.data.token);
+    localStorage.setItem('token', response.data.token);
+
+    await checkAuthStatus();
+
+    setShowUserLogin(false);
                 // 4. Clear form input boxes
                 setName('');
                 setEmail('');

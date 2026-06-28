@@ -4,20 +4,19 @@ import axios from "axios";
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
+  axios.defaults.withCredentials = true;
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-  const [products, setProducts] = useState([]);      
-  const [cartItems, setCartItems] = useState({});    
-  const [orders, setOrders] = useState([]);          
-  const [search, setSearch] = useState(""); 
+  const [products, setProducts] = useState([]);
+  const [cartItems, setCartItems] = useState({});
+  const [orders, setOrders] = useState([]);
+  const [search, setSearch] = useState("");
   const [user, setUser] = useState(null);
   const [showUserLogin, setShowUserLogin] = useState(false);
-  
+
   // ADDED: Centralized Address tracking state
   const [address, setAddress] = useState("");
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-
-  axios.defaults.withCredentials = true;
 
   const getProductsData = async () => {
     try {
@@ -33,7 +32,12 @@ const AppContextProvider = ({ children }) => {
   // UPDATED: Now auto-extracts saved addresses from the user object
   const checkAuthStatus = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/user/is-auth`);
+      const response = await axios.get(
+  `${backendUrl}/api/user/is-auth`,
+  {
+    withCredentials: true
+  }
+);
       if (response.data.success) {
         setUser(response.data.user);
         if (response.data.user.cartItems) {
@@ -58,7 +62,15 @@ const AppContextProvider = ({ children }) => {
   // ADDED: New handler to push fresh addresses through Axios to MongoDB
   const syncAddressWithDatabase = async (addressText) => {
     try {
-      const response = await axios.post(`${backendUrl}/api/user/save-address`, { addressData: addressText });
+      const response = await axios.post(
+  `${backendUrl}/api/user/save-address`,
+  {
+    addressData: addressText
+  },
+  {
+    withCredentials: true
+  }
+);
       if (response.data.success) {
         setAddress(addressText);
       } else {
